@@ -1,0 +1,95 @@
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin-bottom: 60px;
+}
+
+.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
+  color: var(--bs-secondary-color);
+  text-align: end;
+}
+
+.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
+  text-align: start;
+}
+
+.faculty-card {
+    height: 320px;
+    width: 190px;
+    border: 1px solid;
+    border-radius: 0;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin: 0 auto;
+}
+
+    .faculty-card .card-body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+    }
+.fst-card {
+    border-color: #1565C0;
+    color: #1565C0;
+}
+
+    .fst-card:hover {
+        background-color: #1565C0;
+        color: white;
+    }
+
+
+.fe-card {
+    border-color: #F28C28;
+    color: #F28C28;
+}
+
+    .fe-card:hover {
+        background-color: #F28C28;
+        color: white;
+    }
+
+
+.fba-card {
+    border-color: #198754;
+    color: #198754;
+}
+
+    .fba-card:hover {
+        background-color: #198754;
+        color: white;
+    }
+
+
+.fass-card {
+    border-color: #DC3545;
+    color: #DC3545;
+}
+
+    .fass-card:hover {
+        background-color: #DC3545;
+        color: white;
+    }
+
+.form-control.search-input:hover {
+    border-color: #333333;
+}
+
+
+    

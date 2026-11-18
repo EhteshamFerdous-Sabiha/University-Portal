@@ -1,0 +1,91 @@
+@model DbExample.DTO.FacultyMemberFormDTO
+
+@{
+    ViewData["Title"] = "Add Faculty Member";
+}
+
+<div class="max-w-2xl mx-auto">
+    <a asp-controller="FacultyMember" asp-action="Index"
+       class="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline mb-6">
+        ← Back to Members
+    </a>
+
+    <div class="card-tw">
+        <h2 class="text-2xl font-bold text-blue-900 mb-6">➕ Add Faculty Member</h2>
+
+        <form asp-action="Create" method="post">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="All" class="val-summary"></div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label asp-for="FullName" class="form-label-tw">Full Name</label>
+                    <input asp-for="FullName" class="form-input-tw" placeholder="Dr. John Doe" />
+                    <span asp-validation-for="FullName" class="validation-msg"></span>
+                </div>
+                <div>
+                    <label asp-for="Email" class="form-label-tw">Email</label>
+                    <input asp-for="Email" class="form-input-tw" placeholder="john@aiub.edu" />
+                    <span asp-validation-for="Email" class="validation-msg"></span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label asp-for="Phone" class="form-label-tw">Phone</label>
+                    <input asp-for="Phone" class="form-input-tw" placeholder="+880..." />
+                </div>
+                <div>
+                    <label asp-for="JoinDate" class="form-label-tw">Join Date</label>
+                    <input asp-for="JoinDate" type="date" class="form-input-tw" />
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label asp-for="Designation" class="form-label-tw">Designation</label>
+                    <select asp-for="Designation" class="form-input-tw">
+                        <option value="">-- Select Designation --</option>
+                        <option>Professor</option>
+                        <option>Associate Professor</option>
+                        <option>Assistant Professor</option>
+                        <option>Senior Lecturer</option>
+                        <option>Lecturer</option>
+                    </select>
+                </div>
+                <div>
+                    <label asp-for="DepartmentId" class="form-label-tw">Department</label>
+                    <select asp-for="DepartmentId" asp-items="ViewBag.Departments" class="form-input-tw">
+                        <option value="">Select Department</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <label asp-for="ResearchInterest" class="form-label-tw">Research Interest</label>
+                <select asp-for="ResearchInterest" class="form-input-tw">
+                    <option value="">-- Select Research Interest --</option>
+                    <option>Artificial Intelligence</option>
+                    <option>Machine Learning</option>
+                    <option>Data Science</option>
+                    <option>Cyber Security</option>
+                    <option>Computer Networks</option>
+                    <option>Human Computer Interface</option>
+                    <option>Big Data</option>
+                    <option>Cloud Computing</option>
+                    <option>Internet of Things</option>
+                    <option>Robotics</option>
+                </select>
+            </div>
+
+            <div class="flex gap-3">
+                <button type="submit" class="btn-primary-tw">💾 Save Member</button>
+                <a asp-controller="FacultyMember" asp-action="Index" class="btn-secondary-tw">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

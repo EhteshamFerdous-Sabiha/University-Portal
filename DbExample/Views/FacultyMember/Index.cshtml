@@ -1,0 +1,111 @@
+@model IEnumerable<DbExample.Data.Entities.FacultyMember>
+
+@{
+    ViewData["Title"] = "Faculty Members";
+}
+
+<!-- Header + Search -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+    <div>
+        <h1 class="text-3xl font-bold text-blue-900">Faculty Members</h1>
+        <p class="text-gray-500 mt-1">Search by name or research interest</p>
+    </div>
+    @if (User.IsInRole("admin"))
+    {
+        <a asp-controller="FacultyMember" asp-action="Create" class="btn-success-tw">
+            + Add Member
+        </a>
+    }
+</div>
+
+<!-- Search Bar -->
+<form asp-controller="FacultyMember" asp-action="Index" method="get" class="mb-6">
+    <div class="flex gap-2 max-w-xl">
+        <input type="search" name="search" value="@ViewBag.Search"
+               class="form-input-tw flex-1"
+               placeholder="Search name or research interest..." />
+        <button type="submit" class="btn-primary-tw px-5">🔍 Search</button>
+        @if (!string.IsNullOrEmpty(ViewBag.Search as string))
+        {
+            <a asp-action="Index" class="btn-secondary-tw">Clear</a>
+        }
+    </div>
+</form>
+
+<!-- Alerts -->
+@if (TempData["Success"] != null)
+{
+    <div class="alert-success mb-4">✅ @TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert-error mb-4">❌ @TempData["Error"]</div>
+}
+
+<!-- Table -->
+<div class="card-tw p-0 overflow-hidden">
+    <table class="w-full">
+        <thead class="bg-blue-900 text-white">
+            <tr>
+                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Name</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Designation</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Research Interest</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Department</th>
+                @if (User.IsInRole("admin"))
+                {
+                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Actions</th>
+                }
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+            @foreach (var member in Model)
+            {
+                <tr class="hover:bg-blue-50 transition-colors">
+                    <td class="table-td">
+                        <div class="font-semibold text-gray-800">@member.FullName</div>
+                        <div class="text-xs text-gray-400">@member.Email</div>
+                    </td>
+                    <td class="table-td">
+                        @if (!string.IsNullOrEmpty(member.Designation))
+                        {
+                            <span class="inline-block bg-blue-100 text-blue-700 text-xs font-semibold px-2 py-1 rounded-full">
+                                @member.Designation
+                            </span>
+                        }
+                    </td>
+                    <td class="table-td text-gray-500 text-sm">@member.ResearchInterest</td>
+                    <td class="table-td text-gray-600">@member.Department?.Name</td>
+                    @if (User.IsInRole("admin"))
+                    {
+                        <td class="table-td">
+                            <div class="flex gap-2">
+                                <a asp-controller="FacultyMember" asp-action="Edit"
+                                   asp-route-id="@member.FacultyMemberId"
+                                   class="btn-warning-tw">Edit</a>
+
+                                <form asp-controller="FacultyMember" asp-action="Delete"
+                                      asp-route-id="@member.FacultyMemberId"
+                                      method="post" class="inline">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn-danger-tw"
+                                            onclick="return confirm('Delete @member.FullName?');">
+                                        Delete
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    }
+                </tr>
+            }
+            @if (!Model.Any())
+            {
+                <tr>
+                    <td colspan="5" class="text-center py-16 text-gray-400">
+                        <div class="text-5xl mb-3">👥</div>
+                        <p>No members found@(ViewBag.Search != null ? " for \"" + ViewBag.Search + "\"" : "").</p>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

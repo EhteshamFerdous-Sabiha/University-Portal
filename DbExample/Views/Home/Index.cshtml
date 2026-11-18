@@ -1,0 +1,42 @@
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<!-- Hero Section -->
+<div class="text-center py-16">
+    <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-blue-100 mb-6">
+        <svg class="w-10 h-10 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zm0 12.5L3.5 11 2 11.82V17c0 1.1 4.48 3 10 3s10-1.9 10-3v-5.18L12 15.5z"/>
+        </svg>
+    </div>
+    <h1 class="text-4xl font-bold text-blue-900 mb-3">
+        Welcome@(User.Identity != null && User.Identity.IsAuthenticated ? ", " + User.Identity.Name : "")!
+    </h1>
+    <p class="text-gray-500 text-lg mb-8 max-w-xl mx-auto">
+        Manage faculties, departments and faculty members of AIUB from one place.
+    </p>
+    <div class="flex flex-wrap justify-center gap-3">
+        <a asp-controller="Faculty" asp-action="Index" class="btn-primary-tw px-6 py-3 text-base">
+            🏛️ View Faculties
+        </a>
+        <a asp-controller="FacultyMember" asp-action="Index" class="btn-secondary-tw px-6 py-3 text-base">
+            👥 Browse Members
+        </a>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-6">
+    <div class="card-tw text-center">
+        <div class="text-4xl font-bold text-blue-700">4</div>
+        <div class="text-sm text-gray-500 mt-1 font-medium">Faculties</div>
+    </div>
+    <div class="card-tw text-center">
+        <div class="text-4xl font-bold text-green-600">∞</div>
+        <div class="text-sm text-gray-500 mt-1 font-medium">Departments</div>
+    </div>
+    <div class="card-tw text-center">
+        <div class="text-4xl font-bold text-amber-500">∞</div>
+        <div class="text-sm text-gray-500 mt-1 font-medium">Faculty Members</div>
+    </div>
+</div>

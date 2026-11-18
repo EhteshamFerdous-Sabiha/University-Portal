@@ -1,0 +1,311 @@
+@model DbExample.Models.CurriculumViewModel
+
+@{
+    ViewData["Title"] = Model.SelectedProgram != null
+        ? $"{Model.SelectedProgram.ProgramName} - Curriculum"
+        : "Program Curriculum";
+
+    var fstPrograms = Model.AllPrograms.Where(p => p.DepartmentId == 4).ToList();
+    var otherPrograms = Model.AllPrograms.Where(p => p.DepartmentId != 4).ToList();
+}
+
+<div class="flex flex-col lg:flex-row gap-6 items-start">
+
+   
+    <aside class="w-full lg:w-72 flex-shrink-0">
+
+        <div class="space-y-3">
+
+           
+            <div class="rounded-xl overflow-hidden shadow-md border border-blue-900/40 bg-white">
+                
+                <button type="button"
+                        onclick="toggleSidebarMenu('academicsMenu', 'academicsArrow')"
+                        class="w-full flex items-center justify-between px-4 py-3.5 bg-[#0b4887]
+                    hover:bg-[#093c72] text-white font-semibold transition-colors duration-150">
+                    <div class="flex items-center gap-3">
+                        <span class="flex items-center justify-center w-6 h-6 rounded bg-white/10 text-base">
+                            📊
+                        </span>
+                        <span class="text-sm tracking-wide">Academics &amp; Programs</span>
+                    </div>
+                    <svg id="academicsArrow" class="w-4 h-4 transform transition-transform duration-200 rotate-180"
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+
+             
+                <div id="academicsMenu" class="py-2 px-2 bg-slate-50 space-y-1">
+                    <div class="px-2 pt-1 pb-1 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                        Faculty of Science &amp; Tech (FST)
+                    </div>
+
+                    @foreach (var prog in fstPrograms)
+                    {
+                        bool isSelected = Model.SelectedProgram?.ProgramId == prog.ProgramId;
+                        <a asp-controller="Program"
+                           asp-action="Curriculum"
+                           asp-route-programId="@prog.ProgramId"
+                           class="flex items-start gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-150
+                        @(isSelected ? "bg-blue-600 text-white shadow-sm font-semibold" : 
+                                        "text-slate-700 hover:bg-blue-100 hover:text-blue-900")">
+                            <span class="mt-0.5 text-sm">@(isSelected ? "👉" : "📘")</span>
+                            <span class="leading-tight">@prog.ProgramName</span>
+                        </a>
+                    }
+
+                    @if (otherPrograms.Any())
+                    {
+                        <div class="border-t border-slate-200 my-2"></div>
+                        <div class="px-2 pt-1 pb-1 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                            Other Faculties
+                        </div>
+                        @foreach (var prog in otherPrograms)
+                        {
+                            bool isSelected = Model.SelectedProgram?.ProgramId == prog.ProgramId;
+                            <a asp-controller="Program"
+                               asp-action="Curriculum"
+                               asp-route-programId="@prog.ProgramId"
+                               class="flex items-start gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-150
+                    @(isSelected ? "bg-blue-600 text-white shadow-sm font-semibold" : "text-slate-700 hover:bg-blue-100 hover:text-blue-900")">
+                                <span class="mt-0.5 text-sm">@(isSelected ? "👉" : "📙")</span>
+                                <span class="leading-tight">@prog.ProgramName</span>
+                            </a>
+                        }
+                    }
+                </div>
+            </div>
+
+       
+
+            
+            <div class="rounded-xl overflow-hidden shadow-sm">
+                <button type="button"
+                        onclick="toggleSidebarMenu('othersMenu', 'othersArrow')"
+                        class="w-full flex items-center justify-between px-4 py-3.5 bg-[#0b4887] hover:bg-[#093c72] 
+                                 text-white font-semibold transition-colors duration-150">
+                    <div class="flex items-center gap-3">
+                        <span class="flex items-center justify-center w-6 h-6 rounded bg-white/10 text-base">
+                            
+                        </span>
+                        <span class="text-sm tracking-wide">Faculty &amp; Departments</span>
+                    </div>
+                    <svg id="othersArrow" class="w-4 h-4 transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <div id="othersMenu" class="hidden py-2 px-2 bg-slate-50 space-y-1">
+                    <a asp-controller="Faculty" asp-action="Index" class="block px-3 py-2 text-xs text-slate-700 hover:bg-blue-100 rounded-lg">
+                         All Faculties
+                    </a>
+                    <a asp-controller="Faculty" asp-action="FstDetails" class="block px-3 py-2 text-xs text-slate-700 hover:bg-blue-100 rounded-lg">
+                         FST Faculty Details
+                    </a>
+                    <a asp-controller="Department" asp-action="Index" class="block px-3 py-2 text-xs text-slate-700 hover:bg-blue-100 rounded-lg">
+                         Departments
+                    </a>
+                </div>
+            </div>
+
+            
+            
+
+        </div>
+
+    </aside>
+
+   
+    <main class="flex-1 min-w-0 w-full" id="curriculum-section">
+
+        @if (Model.SelectedProgram != null)
+        {
+            <!-- Program Header Banner -->
+            <div class="bg-gradient-to-r from-blue-900 via-indigo-900 to-blue-800 rounded-3xl p-6 sm:p-8 text-white shadow-xl mb-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <div class="inline-flex items-center gap-2 bg-amber-400/20 text-amber-300 border border-amber-300/30 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2">
+                            🎓 @(Model.SelectedProgram.Department?.Name ?? "Faculty of Science & Technology")
+                        </div>
+                        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">
+                            @Model.SelectedProgram.ProgramName
+                        </h1>
+                        <p class="text-blue-200 text-xs sm:text-sm mt-1">
+                            Official Academic Course Curriculum &amp; Prerequisites
+                        </p>
+                    </div>
+
+                    <!-- Program Quick Stats -->
+                    <div class="flex gap-4 sm:gap-6 bg-white/10 backdrop-blur-sm border border-white/15 px-4 py-3 rounded-2xl flex-shrink-0">
+                        <div class="text-center">
+                            <div class="text-xl sm:text-2xl font-black text-amber-400">@Model.SelectedProgram.TotalCredit</div>
+                            <div class="text-[10px] text-blue-200 uppercase tracking-wider">Total Credits</div>
+                        </div>
+                        <div class="w-px bg-white/20"></div>
+                        <div class="text-center">
+                            <div class="text-xl sm:text-2xl font-black text-white">@Model.SelectedProgram.DurationYears</div>
+                            <div class="text-[10px] text-blue-200 uppercase tracking-wider">Duration (Yrs)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search and Filter Bar -->
+            <div class="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-sm mb-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div class="relative w-full sm:w-80">
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
+                    <input type="text"
+                           id="curriculumSearch"
+                           oninput="filterCurriculum()"
+                           placeholder="Filter by Code or Course Title..."
+                           class="w-full rounded-lg border border-slate-300 pl-9 pr-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+
+                <div class="text-xs text-slate-500 font-medium">
+                    Showing curriculum for <span class="font-bold text-blue-700">@Model.SelectedProgram.ProgramName</span>
+                </div>
+            </div>
+
+            <!-- Course Curriculum Tables -->
+            @if (Model.SemesterCurriculum.Any())
+            {
+                <div class="space-y-6" id="semesterContainer">
+                    @foreach (var sem in Model.SemesterCurriculum)
+                    {
+                        decimal semesterCredits = sem.Value.Sum(c => c.CreditHours);
+
+                        <div class="semester-block bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden" data-semester="@sem.Key">
+
+                            <!-- Semester Header Bar -->
+                            <div class="bg-gradient-to-r from-slate-800 to-blue-900 text-white px-5 py-3.5 flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <span class="bg-white/20 text-white px-2.5 py-0.5 rounded-md font-black text-xs">
+                                        SEM @sem.Key
+                                    </span>
+                                    <h2 class="text-sm font-bold tracking-wide">
+                                        Semester @sem.Key
+                                    </h2>
+                                </div>
+                                <div class="text-xs text-amber-300 font-semibold bg-white/10 px-3 py-1 rounded-full border border-amber-300/20">
+                                    Total Credits: @semesterCredits.ToString("0.0")
+                                </div>
+                            </div>
+
+                          
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-slate-100 text-left">
+                                    <thead class="bg-slate-50 text-slate-600 text-xs font-bold uppercase tracking-wider">
+                                        <tr>
+                                            <th class="px-5 py-3.5 w-32">Code</th>
+                                            <th class="px-5 py-3.5">Course Description</th>
+                                            <th class="px-5 py-3.5 w-44">Prereq.</th>
+                                            <th class="px-5 py-3.5 w-24 text-center">Credit</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100 text-sm">
+                                        @foreach (var item in sem.Value)
+                                        {
+                                            bool hasPrereq = !string.IsNullOrWhiteSpace(item.Prereq) && !item.Prereq.Equals("Nil", StringComparison.OrdinalIgnoreCase);
+
+                                            <tr class="course-row hover:bg-blue-50/60 transition-colors"
+                                                data-code="@item.Code.ToLower()"
+                                                data-title="@item.Title.ToLower()">
+
+                                                <!-- Code -->
+                                                <td class="whitespace-nowrap px-5 py-3.5 font-mono font-bold text-blue-700">
+                                                    @item.Code
+                                                </td>
+
+                                                <!-- Course Description -->
+                                                <td class="px-5 py-3.5 font-semibold text-slate-800">
+                                                    @item.Title
+                                                </td>
+
+                                                <!-- Prereq. -->
+                                                <td class="whitespace-nowrap px-5 py-3.5 text-xs">
+                                                    @if (hasPrereq)
+                                                    {
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 font-medium">
+                                                            📌 @item.Prereq
+                                                        </span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="text-slate-400 font-medium">Nil</span>
+                                                    }
+                                                </td>
+
+                                                <!-- Credit -->
+                                                <td class="whitespace-nowrap px-5 py-3.5 text-center font-bold text-slate-900">
+                                                    <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-slate-100 text-xs font-black text-slate-700">
+                                                        @item.CreditHours.ToString("0.#")
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-400">
+                    <div class="text-5xl mb-3">📘</div>
+                    <h3 class="text-lg font-bold text-slate-700">No Course Catalog Found</h3>
+                    <p class="text-sm mt-1">Curriculum for @Model.SelectedProgram.ProgramName has not been added yet.</p>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-400">
+                <div class="text-5xl mb-3">🎓</div>
+                <h3 class="text-lg font-bold text-slate-700">Select a Program from the Sidebar</h3>
+                <p class="text-sm mt-1">Choose any academic program from the left navigation to view its semester curriculum.</p>
+            </div>
+        }
+
+    </main>
+
+</div>
+
+
+<script>
+    function toggleSidebarMenu(menuId, arrowId) {
+        const menu = document.getElementById(menuId);
+        const arrow = document.getElementById(arrowId);
+        if (!menu) return;
+
+        const isHidden = menu.classList.contains('hidden');
+        if (isHidden) {
+            menu.classList.remove('hidden');
+            if (arrow) arrow.classList.add('rotate-180');
+        } else {
+            menu.classList.add('hidden');
+            if (arrow) arrow.classList.remove('rotate-180');
+        }
+    }
+
+    function filterCurriculum() {
+        const input = (document.getElementById('curriculumSearch')?.value || '').toLowerCase().trim();
+        const rows = document.querySelectorAll('.course-row');
+        const blocks = document.querySelectorAll('.semester-block');
+
+        rows.forEach(row => {
+            const code = row.dataset.code || '';
+            const title = row.dataset.title || '';
+            const matches = !input || code.includes(input) || title.includes(input);
+            row.classList.toggle('hidden', !matches);
+        });
+
+        // Hide semester block if all its rows are hidden
+        blocks.forEach(block => {
+            const visibleRows = block.querySelectorAll('.course-row:not(.hidden)');
+            block.classList.toggle('hidden', visibleRows.length === 0);
+        });
+    }
+</script>

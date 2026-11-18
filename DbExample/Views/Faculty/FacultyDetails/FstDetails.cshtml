@@ -1,0 +1,527 @@
+@model IEnumerable<DbExample.Data.Entities.FacultyMember>
+
+@{
+    ViewData["Title"] = "FST – Faculty of Science & Technology";
+    var memberList = Model.ToList();
+    var totalCount = memberList.Count;
+    var deptGroups = memberList.GroupBy(m => m.Department?.Name ?? "Unknown").Count();
+    var designations = memberList.Select(m => m.Designation).Where(d => !string.IsNullOrEmpty(d)).Distinct().OrderBy(d => d).ToList();
+}
+
+<!-- ═══════════════════════════════════════
+     HERO BANNER
+════════════════════════════════════════ -->
+<div class="relative rounded-3xl overflow-hidden mb-8 bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 shadow-2xl">
+    <!-- Background pattern -->
+    <div class="absolute inset-0 opacity-10"
+         style="background-image:radial-gradient(circle at 20% 50%,white 1px,transparent 1px),
+                radial-gradient(circle at 80% 20%,white 1px,transparent 1px);
+                background-size:40px 40px;">
+    </div>
+
+    <div class="relative px-8 py-12 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+        <div>
+            <div class="flex items-center gap-3 mb-3">
+                <span class="text-4xl">🔬</span>
+                <span class="text-xs font-bold tracking-widest text-blue-300 uppercase">AIUB</span>
+            </div>
+            <h1 class="text-3xl md:text-4xl font-extrabold text-white leading-tight">
+                Faculty of Science &amp; Technology
+            </h1>
+            <p class="text-blue-300 mt-2 text-sm">
+                Discover our researchers, lecturers, and professors.
+            </p>
+        </div>
+
+        <!-- Stats -->
+        <div class="flex gap-6 flex-shrink-0">
+            <div class="text-center">
+                <div class="text-4xl font-black text-white" id="statTotal">@totalCount</div>
+                <div class="text-xs text-blue-300 mt-1 uppercase tracking-wider">Members</div>
+            </div>
+            <div class="w-px bg-blue-700"></div>
+            <div class="text-center">
+                <div class="text-4xl font-black text-amber-400">@deptGroups</div>
+                <div class="text-xs text-blue-300 mt-1 uppercase tracking-wider">Departments</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     ALERTS
+════════════════════════════════════════ -->
+@if (TempData["Success"] != null)
+{
+    <div class="alert-success mb-6 flex items-center gap-2">
+        ✅ <span>@TempData["Success"]</span>
+    </div>
+}
+@if (ViewBag.Message != null)
+{
+    <div class="alert-error mb-6 flex items-center gap-2">
+        ⚠️ <span>@ViewBag.Message</span>
+    </div>
+}
+
+<!-- ═══════════════════════════════════════
+     TOOLBAR  (search + filters + add btn)
+════════════════════════════════════════ -->
+<div class="card-tw mb-6">
+    <div class="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+
+        <!-- Server-side search form -->
+        <form asp-controller="Faculty" asp-action="FstDetails"
+              method="get" class="flex gap-2 flex-1 max-w-xl">
+            <div class="relative flex-1">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+                <input type="search" name="search"
+                       value="@(ViewBag.Search ?? string.Empty)"
+                       id="serverSearch"
+                       class="form-input-tw pl-9"
+                       placeholder="Search name or research interest…" />
+            </div>
+            <button type="submit" class="btn-primary-tw">Search</button>
+            @if (!string.IsNullOrEmpty(ViewBag.Search as string))
+            {
+                <a asp-action="FstDetails" asp-controller="Faculty" class="btn-secondary-tw">✕ Clear</a>
+            }
+        </form>
+
+        <!-- Actions -->
+        <div class="flex items-center gap-2 flex-wrap">
+            <a asp-controller="Program" asp-action="Curriculum"
+               class="btn-primary-tw flex-shrink-0 bg-[#0b4887] hover:bg-[#093c72]">
+                📘 Course Curriculum
+            </a>
+            @if (User.IsInRole("admin"))
+            {
+                <a asp-controller="FacultyMember" asp-action="Create"
+                   class="btn-success-tw flex-shrink-0">
+                    ＋ Add Member
+                </a>
+            }
+        </div>
+    </div>
+
+    <!-- Designation Filter Chips (client-side) -->
+    @if (designations.Any())
+    {
+        <div class="mt-4 flex flex-wrap gap-2 items-center">
+            <span class="text-xs text-gray-500 font-medium mr-1">Filter:</span>
+            <button onclick="filterByDesignation('all')"
+                    class="filter-chip active-chip"
+                    data-filter="all">
+                All
+            </button>
+            @foreach (var d in designations)
+            {
+                <button onclick="filterByDesignation('@d')"
+                        class="filter-chip"
+                        data-filter="@d">
+                    @d
+                </button>
+            }
+        </div>
+    }
+
+    <!-- Live search bar (client-side, instant) -->
+    <div class="mt-3 relative">
+        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">⚡</span>
+        <input type="text" id="liveSearch"
+               class="form-input-tw pl-8 text-sm"
+               placeholder="Live filter current results by any field…"
+               oninput="liveFilter()" />
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     MEMBER COUNT BADGE
+════════════════════════════════════════ -->
+<div class="flex items-center justify-between mb-3">
+    <p class="text-sm text-gray-500">
+        Showing <span id="visibleCount" class="font-bold text-blue-700">@totalCount</span>
+        of <span class="font-bold">@totalCount</span> member(s)
+        @if (!string.IsNullOrEmpty(ViewBag.Search as string))
+        {
+            <span>for "<em class="text-blue-600">@ViewBag.Search</em>"</span>
+        }
+    </p>
+
+    <!-- View toggle -->
+    <div class="flex gap-1 bg-gray-100 p-1 rounded-lg">
+        <button onclick="setView('table')" id="btnTable"
+                class="view-toggle-btn active-view px-3 py-1 text-xs rounded-md">
+            ☰ Table
+        </button>
+        <button onclick="setView('card')" id="btnCard"
+                class="view-toggle-btn px-3 py-1 text-xs rounded-md">
+            ⊞ Cards
+        </button>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     TABLE VIEW
+════════════════════════════════════════ -->
+@if (memberList.Any())
+{
+    <div id="tableView" class="card-tw p-0 overflow-hidden">
+        <table class="w-full" id="memberTable">
+            <thead class="bg-blue-900 text-white">
+                <tr>
+                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">#</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider cursor-pointer hover:bg-blue-800"
+                        onclick="sortTable(1)">Name ⇅</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider cursor-pointer hover:bg-blue-800"
+                        onclick="sortTable(2)">Department ⇅</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Research Interest</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider cursor-pointer hover:bg-blue-800"
+                        onclick="sortTable(4)">Designation ⇅</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Email</th>
+                    @if (User.IsInRole("admin"))
+                    {
+                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Actions</th>
+                    }
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100" id="tableBody">
+                @{ int idx = 1; }
+                @foreach (var member in memberList)
+                {
+                    var designationColor = member.Designation switch
+                    {
+                        "Professor"            => "bg-purple-100 text-purple-700",
+                        "Associate Professor"  => "bg-blue-100 text-blue-700",
+                        "Assistant Professor"  => "bg-indigo-100 text-indigo-700",
+                        "Senior Lecturer"      => "bg-teal-100 text-teal-700",
+                        "Lecturer"             => "bg-green-100 text-green-700",
+                        _                      => "bg-gray-100 text-gray-600"
+                    };
+
+                    <tr class="member-row hover:bg-blue-50 transition-colors"
+                        data-designation="@member.Designation"
+                        data-name="@member.FullName"
+                        data-dept="@member.Department?.Name"
+                        data-research="@member.ResearchInterest"
+                        data-email="@member.Email">
+                        <td class="px-4 py-3 text-xs text-gray-400 font-mono">@(idx++)</td>
+                        <td class="px-4 py-3">
+                            <div class="font-semibold text-gray-800">@member.FullName</div>
+                        </td>
+                        <td class="px-4 py-3 text-sm text-gray-600">@member.Department?.Name</td>
+                        <td class="px-4 py-3 text-sm text-gray-500 max-w-xs truncate" title="@member.ResearchInterest">
+                            @member.ResearchInterest
+                        </td>
+                        <td class="px-4 py-3">
+                            @if (!string.IsNullOrEmpty(member.Designation))
+                            {
+                                <span class="inline-block text-xs font-semibold px-2 py-1 rounded-full @designationColor">
+                                    @member.Designation
+                                </span>
+                            }
+                        </td>
+                        <td class="px-4 py-3 text-sm text-blue-600">
+                            <a href="mailto:@member.Email" class="hover:underline">@member.Email</a>
+                        </td>
+                        @if (User.IsInRole("admin"))
+                        {
+                            <td class="px-4 py-3">
+                                <div class="flex gap-2">
+                                    <a asp-controller="FacultyMember"
+                                       asp-action="Edit"
+                                       asp-route-id="@member.FacultyMemberId"
+                                       class="btn-warning-tw">✏️ Edit</a>
+
+                                    <form asp-controller="FacultyMember"
+                                          asp-action="Delete"
+                                          asp-route-id="@member.FacultyMemberId"
+                                          method="post" class="inline"
+                                          onsubmit="return confirmDelete('@member.FullName')">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn-danger-tw">🗑 Delete</button>
+                                    </form>
+                                </div>
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ═══════════════════════════════════════
+         CARD VIEW  (hidden by default)
+    ════════════════════════════════════════ -->
+    <div id="cardView" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5" id="cardGrid">
+        @foreach (var member in memberList)
+        {
+            var gradient = member.Designation switch
+            {
+                "Professor"           => "from-purple-500 to-purple-700",
+                "Associate Professor" => "from-blue-500 to-blue-700",
+                "Assistant Professor" => "from-indigo-500 to-indigo-700",
+                "Senior Lecturer"     => "from-teal-500 to-teal-600",
+                "Lecturer"            => "from-green-500 to-green-700",
+                _                     => "from-gray-500 to-gray-700"
+            };
+            var initials = string.Join("", member.FullName.Split(' ').Take(2).Select(w => w[0]));
+
+            <div class="member-row bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-200"
+                 data-designation="@member.Designation"
+                 data-name="@member.FullName"
+                 data-dept="@member.Department?.Name"
+                 data-research="@member.ResearchInterest"
+                 data-email="@member.Email">
+
+                <!-- Card header -->
+                <div class="bg-gradient-to-br @gradient px-5 py-6 flex items-center gap-4">
+                    <div class="w-14 h-14 rounded-full bg-white bg-opacity-20 flex items-center justify-center text-white font-bold text-xl flex-shrink-0">
+                        @initials
+                    </div>
+                    <div class="min-w-0">
+                        <div class="text-white font-bold text-base truncate">@member.FullName</div>
+                        <div class="text-white text-opacity-80 text-xs mt-0.5">@member.Designation</div>
+                    </div>
+                </div>
+
+                <!-- Card body -->
+                <div class="px-5 py-4 space-y-2">
+                    <div class="flex items-center gap-2 text-sm text-gray-600">
+                        <span>🏢</span> <span class="truncate">@member.Department?.Name</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-sm text-gray-600">
+                        <span>🔬</span>
+                        <span class="truncate" title="@member.ResearchInterest">
+                            @(member.ResearchInterest ?? "—")
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-2 text-sm text-blue-600">
+                        <span>✉️</span>
+                        <a href="mailto:@member.Email" class="truncate hover:underline">@member.Email</a>
+                    </div>
+                </div>
+
+                <!-- Card footer -->
+                @if (User.IsInRole("admin"))
+                {
+                    <div class="px-5 pb-4 flex gap-2">
+                        <a asp-controller="FacultyMember"
+                           asp-action="Edit"
+                           asp-route-id="@member.FacultyMemberId"
+                           class="btn-warning-tw flex-1 justify-center text-center">
+                            ✏️ Edit
+                        </a>
+                        <form asp-controller="FacultyMember"
+                              asp-action="Delete"
+                              asp-route-id="@member.FacultyMemberId"
+                              method="post"
+                              onsubmit="return confirmDelete('@member.FullName')">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn-danger-tw">🗑</button>
+                        </form>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    <!-- No results message (hidden) -->
+    <div id="noResults" class="hidden text-center py-20 text-gray-400">
+        <div class="text-6xl mb-4">🔍</div>
+        <p class="text-lg font-medium">No members match your filter.</p>
+        <button onclick="resetFilters()" class="btn-secondary-tw mt-4">Reset Filters</button>
+    </div>
+}
+else
+{
+    <div class="text-center py-20 text-gray-400">
+        <div class="text-6xl mb-4">👥</div>
+        <p class="text-lg font-medium">
+            @(ViewBag.Search != null ? $"No members found for \"{ViewBag.Search}\"." : "No faculty members yet.")
+        </p>
+        @if (User.IsInRole("admin"))
+        {
+            <a asp-controller="FacultyMember" asp-action="Create"
+               class="btn-success-tw mt-4 inline-flex">
+                ＋ Add First Member
+            </a>
+        }
+    </div>
+}
+
+<!-- ═══════════════════════════════════════
+     DELETE CONFIRM MODAL
+════════════════════════════════════════ -->
+<div id="deleteModal"
+     class="fixed inset-0 z-50 hidden items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full mx-4 text-center">
+        <div class="text-5xl mb-4">⚠️</div>
+        <h3 class="text-xl font-bold text-gray-800 mb-2">Confirm Delete</h3>
+        <p class="text-gray-500 text-sm mb-6">
+            Are you sure you want to delete <strong id="deleteName"></strong>?
+            This action cannot be undone.
+        </p>
+        <div class="flex gap-3 justify-center">
+            <button onclick="cancelDelete()" class="btn-secondary-tw px-6">Cancel</button>
+            <button id="confirmDeleteBtn" class="btn-danger-tw px-6">🗑 Yes, Delete</button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     STYLES
+════════════════════════════════════════ -->
+<style>
+    .filter-chip {
+        @@apply px-3 py-1 rounded-full text-xs font-medium border border-gray-300
+               text-gray-600 bg-white hover:border-blue-500 hover:text-blue-600
+               transition-colors cursor-pointer;
+    }
+    .active-chip {
+        @@apply bg-blue-600 text-white border-blue-600 hover:text-white hover:border-blue-700;
+    }
+    .view-toggle-btn {
+        @@apply text-xs font-medium text-gray-500 cursor-pointer transition-colors;
+    }
+    .active-view {
+        @@apply bg-white text-blue-700 shadow font-semibold;
+    }
+</style>
+
+<!-- ═══════════════════════════════════════
+     JAVASCRIPT  –  all client-side logic
+════════════════════════════════════════ -->
+<script>
+    // ── State ──────────────────────────────
+    let currentFilter = 'all';
+    let currentView   = 'table';
+    let pendingForm   = null;
+
+    // ── View Toggle ────────────────────────
+    function setView(v) {
+        currentView = v;
+        const tableView = document.getElementById('tableView');
+        const cardView  = document.getElementById('cardView');
+        document.getElementById('btnTable').classList.toggle('active-view', v === 'table');
+        document.getElementById('btnCard').classList.toggle('active-view',  v === 'card');
+        if (tableView) tableView.classList.toggle('hidden', v !== 'table');
+        if (cardView)  cardView.classList.toggle('hidden',  v !== 'card');
+        applyFilters();
+    }
+
+    // ── Designation Filter Chips ───────────
+    function filterByDesignation(val) {
+        currentFilter = val;
+        document.querySelectorAll('.filter-chip').forEach(btn => {
+            btn.classList.toggle('active-chip', btn.dataset.filter === val);
+        });
+        applyFilters();
+    }
+
+    // ── Live Search ────────────────────────
+    function liveFilter() { applyFilters(); }
+
+    // ── Combined filter logic ──────────────
+    function applyFilters() {
+        const keyword = (document.getElementById('liveSearch').value || '').toLowerCase().trim();
+        const rows    = document.querySelectorAll('.member-row');
+        let visible   = 0;
+
+        rows.forEach(row => {
+            const name     = (row.dataset.name       || '').toLowerCase();
+            const dept     = (row.dataset.dept        || '').toLowerCase();
+            const research = (row.dataset.research    || '').toLowerCase();
+            const email    = (row.dataset.email       || '').toLowerCase();
+            const desig    = (row.dataset.designation || '');
+
+            const matchesFilter  = currentFilter === 'all' || desig === currentFilter;
+            const matchesKeyword = !keyword ||
+                name.includes(keyword) || dept.includes(keyword) ||
+                research.includes(keyword) || email.includes(keyword);
+
+            const show = matchesFilter && matchesKeyword;
+            row.classList.toggle('hidden', !show);
+            if (show) visible++;
+        });
+
+        document.getElementById('visibleCount').textContent = visible;
+        const noRes = document.getElementById('noResults');
+        if (noRes) noRes.classList.toggle('hidden', visible > 0);
+    }
+
+    // ── Sort table by column ───────────────
+    let sortAsc = {};
+    function sortTable(colIdx) {
+        const tbody = document.getElementById('tableBody');
+        if (!tbody) return;
+        const rows  = Array.from(tbody.querySelectorAll('tr.member-row'));
+        sortAsc[colIdx] = !sortAsc[colIdx];
+
+        rows.sort((a, b) => {
+            const aText = (a.cells[colIdx]?.innerText || '').trim().toLowerCase();
+            const bText = (b.cells[colIdx]?.innerText || '').trim().toLowerCase();
+            return sortAsc[colIdx]
+                ? aText.localeCompare(bText)
+                : bText.localeCompare(aText);
+        });
+        rows.forEach(r => tbody.appendChild(r));
+        // Re-number
+        rows.forEach((r, i) => { if (r.cells[0]) r.cells[0].textContent = i + 1; });
+    }
+
+    // ── Delete Modal ───────────────────────
+    function confirmDelete(name) {
+        // intercept all delete forms — called via onsubmit
+        document.getElementById('deleteName').textContent = name;
+        document.getElementById('deleteModal').classList.remove('hidden');
+        document.getElementById('deleteModal').classList.add('flex');
+        return false; // prevent immediate submit
+    }
+
+    // We need to wire up the actual form submit to the confirm button
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('form[data-delete]').forEach(f => {
+            f.addEventListener('submit', e => {
+                e.preventDefault();
+                pendingForm = f;
+            });
+        });
+
+        // Wire each delete form's onsubmit to store the form reference
+        document.querySelectorAll('form').forEach(f => {
+            if (f.action && f.action.includes('Delete')) {
+                const origOnsubmit = f.onsubmit;
+                f.onsubmit = function(e) {
+                    pendingForm = f;
+                    // origOnsubmit already returns false (shows modal)
+                    if (origOnsubmit) return origOnsubmit.call(f, e);
+                    return false;
+                };
+            }
+        });
+    });
+
+    document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
+        if (pendingForm) {
+            pendingForm.onsubmit = null; // prevent recursion
+            pendingForm.submit();
+        }
+    });
+
+    function cancelDelete() {
+        pendingForm = null;
+        document.getElementById('deleteModal').classList.add('hidden');
+        document.getElementById('deleteModal').classList.remove('flex');
+    }
+
+    function resetFilters() {
+        document.getElementById('liveSearch').value = '';
+        filterByDesignation('all');
+    }
+
+    //Close modal on backdrop click
+    document.getElementById('deleteModal').addEventListener('click', function(e) {
+        if (e.target === this) cancelDelete();
+    });
+</script>

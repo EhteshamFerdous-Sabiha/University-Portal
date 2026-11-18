@@ -1,0 +1,168 @@
+@model DbExample.Data.Entities.Student
+
+@{
+    ViewData["Title"] = $"{Model.StudentName} – Details";
+
+    bool isActive = Model.Status?.Equals("Active", StringComparison.OrdinalIgnoreCase) == true;
+
+    int daysLeft = Model.Validity.HasValue
+        ? Model.Validity.Value.DayNumber - DateOnly.FromDateTime(DateTime.Today).DayNumber
+        : int.MaxValue;
+
+    string validityLabel = Model.Validity?.ToString("dd MMM yyyy") ?? "Not Set";
+    string validityBadge = "";
+    if (Model.Validity.HasValue)
+    {
+        if (daysLeft < 0)        { validityBadge = "bg-rose-100 text-rose-700";   validityLabel += " — Expired"; }
+        else if (daysLeft <= 30) { validityBadge = "bg-amber-100 text-amber-700"; validityLabel += $" — {daysLeft} days left"; }
+        else                     { validityBadge = "bg-green-100 text-green-700"; }
+    }
+    else { validityBadge = "bg-gray-100 text-gray-500"; }
+
+    var initials = string.IsNullOrWhiteSpace(Model.StudentName) ? "?"
+        : string.Join("", Model.StudentName.Split(' ').Take(2).Select(w => w[0].ToString().ToUpper()));
+}
+
+<!-- Back link -->
+<a asp-controller="Student" asp-action="StudentIndex"
+   class="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline mb-6">
+    ← Back to Student Directory
+</a>
+
+<!-- Profile card -->
+<div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-md max-w-4xl mx-auto">
+
+    <!-- ── Header gradient banner ── -->
+    <div class="bg-gradient-to-br from-blue-900 to-indigo-800 px-8 py-8">
+        <div class="flex flex-wrap items-center justify-between gap-5">
+
+            <!-- Avatar + Name -->
+            <div class="flex items-center gap-5">
+                <div class="flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-full
+                            bg-white bg-opacity-20 text-white text-3xl font-black border-2 border-white border-opacity-40">
+                    @initials
+                </div>
+                <div>
+                    <h1 class="text-2xl font-extrabold text-white">@Model.StudentName</h1>
+                    <p class="text-blue-200 text-sm mt-1 font-mono">ID: @Model.StudentNo</p>
+                </div>
+            </div>
+
+            <!-- Status badge -->
+            @if (isActive)
+            {
+                <span class="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-5 py-2 text-sm font-bold text-emerald-700">
+                    <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span> Active
+                </span>
+            }
+            else
+            {
+                <span class="inline-flex items-center gap-2 rounded-full bg-rose-100 px-5 py-2 text-sm font-bold text-rose-700">
+                    <span class="h-2 w-2 rounded-full bg-rose-500"></span> Inactive
+                </span>
+            }
+        </div>
+    </div>
+
+    <!-- ── Info grid ── -->
+    <div class="p-8">
+        <h2 class="text-base font-bold text-slate-500 uppercase tracking-wider mb-6">
+            Personal &amp; Academic Information
+        </h2>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+
+            <!-- Full Name -->
+            <div class="bg-slate-50 rounded-xl p-4">
+                <p class="text-xs text-slate-400 font-medium uppercase tracking-wide mb-1">Full Name</p>
+                <p class="font-semibold text-slate-800 text-base">@Model.StudentName</p>
+            </div>
+
+            <!-- Student ID -->
+            <div class="bg-slate-50 rounded-xl p-4">
+                <p class="text-xs text-slate-400 font-medium uppercase tracking-wide mb-1">Student ID</p>
+                <p class="font-semibold text-slate-800 font-mono text-base">@Model.StudentNo</p>
+            </div>
+
+            <!-- Date of Birth -->
+            <div class="bg-slate-50 rounded-xl p-4">
+                <p class="text-xs text-slate-400 font-medium uppercase tracking-wide mb-1">Date of Birth</p>
+                <p class="font-semibold text-slate-800">@Model.DateOfBirth.ToString("dd MMMM yyyy")</p>
+            </div>
+
+            <!-- University Email -->
+            <div class="bg-slate-50 rounded-xl p-4">
+                <p class="text-xs text-slate-400 font-medium uppercase tracking-wide mb-1">University Email</p>
+                <a href="mailto:@Model.Email" class="font-semibold text-blue-600 hover:underline">@Model.Email</a>
+            </div>
+
+            <!-- Phone -->
+            <div class="bg-slate-50 rounded-xl p-4">
+                <p class="text-xs text-slate-400 font-medium uppercase tracking-wide mb-1">Phone Number</p>
+                <p class="font-semibold text-slate-800">
+                    @(string.IsNullOrWhiteSpace(Model.Phone) ? "Not Provided" : Model.Phone)
+                </p>
+            </div>
+
+            <!-- Program Details -->
+            <div class="bg-slate-50 rounded-xl p-4 sm:col-span-2 border border-blue-100/60 bg-gradient-to-r from-blue-50/50 to-indigo-50/30">
+                <p class="text-xs text-blue-600 font-semibold uppercase tracking-wide mb-1 flex items-center gap-1.5">
+                    <span>🎓</span> Degree Program Information
+                </p>
+                @if (Model.Program != null)
+                {
+                    <p class="font-bold text-slate-900 text-base">@Model.Program.ProgramName</p>
+                    <div class="flex flex-wrap gap-4 mt-2 text-xs text-slate-500">
+                        <span class="inline-flex items-center gap-1 bg-white px-2.5 py-1 rounded-md border border-slate-200">
+                            <strong>Credits:</strong> @Model.Program.TotalCredit
+                        </span>
+                        <span class="inline-flex items-center gap-1 bg-white px-2.5 py-1 rounded-md border border-slate-200">
+                            <strong>Duration:</strong> @Model.Program.DurationYears Years
+                        </span>
+                        <span class="inline-flex items-center gap-1 bg-white px-2.5 py-1 rounded-md border border-slate-200">
+                            <strong>Program ID:</strong> #@Model.ProgramId
+                        </span>
+                    </div>
+                }
+                else
+                {
+                    <p class="font-semibold text-slate-700">Program ID: @Model.ProgramId</p>
+                }
+            </div>
+
+            <!-- Validity -->
+            <div class="bg-slate-50 rounded-xl p-4">
+                <p class="text-xs text-slate-400 font-medium uppercase tracking-wide mb-1">Validity</p>
+                <span class="inline-block rounded-full px-3 py-1 text-xs font-semibold @validityBadge">
+                    @validityLabel
+                </span>
+            </div>
+
+            <!-- Status -->
+            <div class="bg-slate-50 rounded-xl p-4">
+                <p class="text-xs text-slate-400 font-medium uppercase tracking-wide mb-1">Status</p>
+                @if (isActive)
+                {
+                    <span class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+                        <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span> Active
+                    </span>
+                }
+                else
+                {
+                    <span class="inline-flex items-center gap-1 rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-700">
+                        <span class="h-1.5 w-1.5 rounded-full bg-rose-500"></span> Inactive
+                    </span>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Footer ── -->
+    <div class="border-t border-slate-100 bg-slate-50 px-8 py-5 flex gap-3">
+        <a asp-controller="Student" asp-action="StudentIndex"
+           class="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-5 py-2.5
+                  text-sm font-semibold text-slate-700 hover:bg-slate-100 transition">
+            ← Back to Directory
+        </a>
+    </div>
+</div>

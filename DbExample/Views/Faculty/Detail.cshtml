@@ -1,0 +1,42 @@
+@model Faculty
+
+@{
+    bool isNew = Model.Id == 0;
+    ViewData["Title"] = isNew ? "New Faculty" : "Edit Faculty";
+}
+
+<div class="max-w-md mx-auto">
+    <a asp-action="Index" asp-controller="Faculty"
+       class="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline mb-6">
+        ← Back to Faculties
+    </a>
+
+    <div class="card-tw">
+        <h2 class="text-2xl font-bold text-blue-900 mb-6">
+            @(isNew ? "➕ New Faculty" : "✏️ Edit Faculty")
+        </h2>
+
+        <form method="post">
+            <div class="mb-4">
+                <label asp-for="Id" class="form-label-tw">ID</label>
+                <input asp-for="Id" class="form-input-tw bg-gray-100" readonly />
+                <span asp-validation-for="Id" class="validation-msg"></span>
+            </div>
+
+            <div class="mb-6">
+                <label asp-for="Title" class="form-label-tw">Title (e.g. FST, FE, FBA)</label>
+                <input asp-for="Title" class="form-input-tw" placeholder="FST" />
+                <span asp-validation-for="Title" class="validation-msg"></span>
+            </div>
+
+            <div class="flex gap-3">
+                <button type="submit" class="btn-primary-tw">💾 Save</button>
+                <a asp-action="Index" asp-controller="Faculty" class="btn-secondary-tw">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

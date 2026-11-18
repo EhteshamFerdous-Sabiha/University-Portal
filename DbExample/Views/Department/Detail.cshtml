@@ -1,0 +1,62 @@
+@model DbExample.DTO.DepartmentDTO
+
+@{
+    bool isNew = Model.Id == 0;
+    ViewData["Title"] = isNew ? "New Department" : "Edit Department";
+}
+
+<div class="max-w-lg mx-auto">
+    <!-- Back link -->
+    <a asp-action="Index" asp-controller="Department"
+       class="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline mb-6">
+        ← Back to Departments
+    </a>
+
+    <div class="card-tw">
+        <h2 class="text-2xl font-bold text-blue-900 mb-6">
+            @(isNew ? "➕ New Department" : "✏️ Edit Department")
+        </h2>
+
+        <form method="post">
+            <div asp-validation-summary="All" class="val-summary"></div>
+
+            <div class="mb-4">
+                <label asp-for="Id" class="form-label-tw">ID</label>
+                <input asp-for="Id" class="form-input-tw bg-gray-100" readonly />
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="Name" class="form-label-tw">Department Name</label>
+                <input asp-for="Name" class="form-input-tw" placeholder="Department of ..." />
+                <span asp-validation-for="Name" class="validation-msg"></span>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="ShortCode" class="form-label-tw">Short Code (3 chars)</label>
+                <input asp-for="ShortCode" class="form-input-tw" maxlength="3" placeholder="e.g. CSE" />
+                <span asp-validation-for="ShortCode" class="validation-msg"></span>
+            </div>
+
+            <div class="mb-6">
+                <label asp-for="FacultyId" class="form-label-tw">Faculty</label>
+                <select asp-for="FacultyId" class="form-input-tw" asp-items="ViewBag.Faculties">
+                    <option disabled selected>-- Select Faculty --</option>
+                </select>
+                <span asp-validation-for="FacultyId" class="validation-msg"></span>
+            </div>
+
+            <div class="flex gap-3">
+                <button type="submit" class="btn-primary-tw">
+                    💾 Save
+                </button>
+                <a asp-action="Index" asp-controller="Department" class="btn-secondary-tw">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

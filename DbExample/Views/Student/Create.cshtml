@@ -1,0 +1,154 @@
+@model DbExample.DTO.StudentDTO
+
+@{
+    ViewData["Title"] = "Add New Student";
+}
+
+<div class="max-w-3xl mx-auto py-4">
+
+    <!-- Back Button -->
+    <a asp-controller="Student" asp-action="StudentIndex"
+       class="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-800 transition mb-6">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        Back to Student Directory
+    </a>
+
+    <!-- Form Container Card -->
+    <div class="bg-white rounded-3xl border border-slate-200/80 shadow-xl overflow-hidden">
+
+        <!-- Card Header Banner -->
+        <div class="bg-gradient-to-r from-blue-900 via-indigo-900 to-blue-800 px-8 py-6 text-white">
+            <div class="flex items-center gap-3">
+                <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-2xl border border-white/20">
+                    🎓
+                </span>
+                <div>
+                    <h1 class="text-2xl font-bold tracking-tight">Register New Student</h1>
+                    <p class="text-blue-200 text-xs mt-0.5">Fill in the student's personal, academic, and contact details.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Body -->
+        <form asp-action="Create" method="post" class="p-8">
+            @Html.AntiForgeryToken()
+
+            <!-- Validation Summary -->
+            <div asp-validation-summary="ModelOnly" class="val-summary mb-6"></div>
+
+            <div class="space-y-6">
+
+                <!-- Section: Personal Information -->
+                <div>
+                    <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                        <span>👤</span> Personal Information
+                    </h2>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <!-- Student Name -->
+                        <div>
+                            <label asp-for="StudentName" class="form-label-tw">Full Name <span class="text-rose-500">*</span></label>
+                            <input asp-for="StudentName" class="form-input-tw" placeholder="Enter full name" />
+                            <span asp-validation-for="StudentName" class="validation-msg"></span>
+                        </div>
+
+                        <!-- Date of Birth -->
+                        <div>
+                            <label asp-for="DateOfBirth" class="form-label-tw">Date of Birth <span class="text-rose-500">*</span></label>
+                            <input asp-for="DateOfBirth" type="date" class="form-input-tw" />
+                            <span asp-validation-for="DateOfBirth" class="validation-msg"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border-t border-slate-100"></div>
+
+                <!-- Section: Academic Information -->
+                <div>
+                    <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                        <span>🏛️</span> Academic Information
+                    </h2>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <!-- Student ID -->
+                        <div>
+                            <label asp-for="StudentNo" class="form-label-tw">Student ID / Roll No <span class="text-rose-500">*</span></label>
+                            <input asp-for="StudentNo" class="form-input-tw font-mono" placeholder="Enter student ID" />
+                            <span asp-validation-for="StudentNo" class="validation-msg"></span>
+                        </div>
+
+                        <!-- Program -->
+                        <div>
+                            <label asp-for="ProgramId" class="form-label-tw">Academic Program <span class="text-rose-500">*</span></label>
+                            <select asp-for="ProgramId" asp-items="ViewBag.Programs" class="form-input-tw">
+                                <option value="">-- Select Degree Program --</option>
+                            </select>
+                            <span asp-validation-for="ProgramId" class="validation-msg"></span>
+                        </div>
+
+                        <!-- Validity Expiration Date -->
+                        <div>
+                            <label asp-for="Validity" class="form-label-tw">ID Validity / Expiration</label>
+                            <input asp-for="Validity" type="date" class="form-input-tw" />
+                            <span asp-validation-for="Validity" class="validation-msg"></span>
+                            <p class="text-[11px] text-slate-400 mt-1">Default is set to 4 years from now.</p>
+                        </div>
+
+                        <!-- Status -->
+                        <div>
+                            <label asp-for="Status" class="form-label-tw">Enrollment Status <span class="text-rose-500">*</span></label>
+                            <select asp-for="Status" class="form-input-tw">
+                                <option value="Active">🟢 Active</option>
+                                <option value="Inactive">🔴 Inactive</option>
+                            </select>
+                            <span asp-validation-for="Status" class="validation-msg"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border-t border-slate-100"></div>
+
+                <!-- Section: Contact Details -->
+                <div>
+                    <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                        <span>📞</span> Contact Information
+                    </h2>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <!-- Varsity Email -->
+                        <div>
+                            <label asp-for="Email" class="form-label-tw">Varsity Email <span class="text-rose-500">*</span></label>
+                            <input asp-for="Email" type="email" class="form-input-tw" placeholder="Enter varsity email" />
+                            <span asp-validation-for="Email" class="validation-msg"></span>
+                        </div>
+
+                        <!-- Phone Number -->
+                        <div>
+                            <label asp-for="Phone" class="form-label-tw">Phone Number <span class="text-rose-500">*</span></label>
+                            <input asp-for="Phone" type="tel" class="form-input-tw" placeholder="Enter phone number" />
+                            <span asp-validation-for="Phone" class="validation-msg"></span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Form Actions -->
+            <div class="mt-8 pt-6 border-t border-slate-100 flex items-center justify-end gap-3">
+                <a asp-controller="Student" asp-action="StudentIndex" class="btn-secondary-tw">
+                    Cancel
+                </a>
+                <button type="submit" class="btn-success-tw px-6 py-2.5 text-sm font-semibold shadow-md">
+                    💾 Save &amp; Register Student
+                </button>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

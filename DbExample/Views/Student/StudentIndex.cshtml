@@ -1,0 +1,301 @@
+@model IEnumerable<DbExample.Data.Entities.Student>
+
+@{
+    ViewData["Title"] = "Student Directory";
+    var list     = Model.ToList();
+    int total    = list.Count;
+    int active   = list.Count(s => s.Status?.Equals("Active",   StringComparison.OrdinalIgnoreCase) == true);
+    int inactive = list.Count(s => s.Status?.Equals("Inactive", StringComparison.OrdinalIgnoreCase) == true);
+}
+
+<!-- ══════════════════════════════════════
+     HERO HEADER
+══════════════════════════════════════ -->
+<div class="relative rounded-3xl overflow-hidden mb-8 bg-gradient-to-br from-slate-800 via-blue-900 to-indigo-900 shadow-2xl">
+    <div class="absolute inset-0 opacity-10"
+         style="background-image:radial-gradient(circle at 15% 50%,white 1px,transparent 1px),
+                radial-gradient(circle at 85% 20%,white 1px,transparent 1px);
+                background-size:36px 36px;">
+    </div>
+    <div class="relative px-8 py-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+        <div>
+            <div class="flex items-center gap-2 mb-2">
+                <span class="text-3xl">🎓</span>
+                <span class="text-xs font-bold tracking-widest text-blue-300 uppercase">AIUB</span>
+            </div>
+            <h1 class="text-3xl md:text-4xl font-extrabold text-white">Student Directory</h1>
+            <p class="text-blue-300 mt-1 text-sm">Search, filter and manage student records.</p>
+        </div>
+
+        <!-- Action Button -->
+        <a asp-controller="Student" asp-action="Create"
+           class="btn-success-tw flex-shrink-0 shadow-sm">
+            ＋ Add New Student
+        </a>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     ALERTS
+══════════════════════════════════════ -->
+@if (TempData["Success"] != null)
+{
+    <div class="alert-success mb-6 flex items-center gap-2">
+        ✅ <span>@TempData["Success"]</span>
+    </div>
+}
+
+<!-- ══════════════════════════════════════
+     TOOLBAR
+══════════════════════════════════════ -->
+<div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-6">
+    <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+
+        <!-- Live search -->
+        <div class="relative flex-1 max-w-md w-full">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+            <input id="liveSearch" type="search"
+                   class="w-full rounded-lg border border-gray-300 pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                   placeholder="Search name, ID, email, phone…"
+                   oninput="applyFilters()" />
+        </div>
+
+        <!-- Status filter chips -->
+        <div class="flex gap-2 flex-wrap">
+            <button onclick="filterStatus('all')"   class="status-chip active-chip" data-s="all">All</button>
+            <button onclick="filterStatus('Active')" class="status-chip" data-s="Active">🟢 Active</button>
+            <button onclick="filterStatus('Inactive')" class="status-chip" data-s="Inactive">🔴 Inactive</button>
+        </div>
+    </div>
+
+    <!-- Result count -->
+    <p class="text-xs text-gray-400 mt-3">
+        Showing <span id="visibleCount" class="font-bold text-blue-600">@total</span> of @total student(s)
+    </p>
+</div>
+
+<!-- ══════════════════════════════════════
+     STUDENT TABLE
+══════════════════════════════════════ -->
+<div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-slate-100" id="studentTable">
+            <thead class="bg-blue-900 text-white">
+                <tr class="text-left text-xs font-semibold uppercase tracking-wider">
+                    <th class="px-5 py-4 cursor-pointer hover:bg-blue-800 select-none" onclick="sortTable(0)">Name ⇅</th>
+                    <th class="px-5 py-4 cursor-pointer hover:bg-blue-800 select-none" onclick="sortTable(1)">Student ID ⇅</th>
+                    <th class="px-5 py-4 cursor-pointer hover:bg-blue-800 select-none" onclick="sortTable(2)">Program ⇅</th>
+                    <th class="px-5 py-4">Date of Birth</th>
+                    <th class="px-5 py-4">University Email</th>
+                    <th class="px-5 py-4">Phone</th>
+                    <th class="px-5 py-4">Validity</th>
+                    <th class="px-5 py-4">Status</th>
+                    <th class="px-5 py-4 text-center">Action</th>
+                </tr>
+            </thead>
+
+            <tbody class="divide-y divide-slate-100 bg-white" id="tableBody">
+                @foreach (var s in list)
+                {
+                    bool isActive = s.Status?.Equals("Active", StringComparison.OrdinalIgnoreCase) == true;
+
+                    // Validity warning: expired = red, within 30 days = amber, OK = gray
+                    string validityClass = "text-slate-500";
+                    string validityLabel = s.Validity?.ToString("dd MMM yyyy") ?? "—";
+                    if (s.Validity.HasValue)
+                    {
+                        int daysLeft = s.Validity.Value.DayNumber - DateOnly.FromDateTime(DateTime.Today).DayNumber;
+                        if (daysLeft < 0)       { validityClass = "text-rose-600 font-semibold";  validityLabel += " ⚠ Expired"; }
+                        else if (daysLeft <= 30) { validityClass = "text-amber-600 font-semibold"; validityLabel += $" ({daysLeft}d)"; }
+                    }
+
+                    var initials = string.IsNullOrWhiteSpace(s.StudentName) ? "?"
+                        : string.Join("", s.StudentName.Split(' ').Take(2).Select(w => w[0].ToString().ToUpper()));
+
+                    <tr class="student-row transition-colors hover:bg-blue-50/60"
+                        data-name="@s.StudentName.ToLower()"
+                        data-id="@s.StudentNo.ToLower()"
+                        data-program="@(s.Program?.ProgramName?.ToLower() ?? "")"
+                        data-email="@s.Email.ToLower()"
+                        data-phone="@s.Phone"
+                        data-status="@s.Status">
+
+                        <!-- Name + avatar -->
+                        <td class="whitespace-nowrap px-5 py-4">
+                            <div class="flex items-center gap-3">
+                                <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full
+                                            @(isActive ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-500")
+                                            font-bold text-sm">
+                                    @initials
+                                </div>
+                                <span class="font-semibold text-slate-800">@s.StudentName</span>
+                            </div>
+                        </td>
+
+                        <!-- Student ID -->
+                        <td class="whitespace-nowrap px-5 py-4 text-sm font-mono font-medium text-slate-600">
+                            @s.StudentNo
+                        </td>
+
+                        <!-- Program -->
+                        <td class="whitespace-nowrap px-5 py-4 text-sm text-slate-700">
+                            @if (s.Program != null)
+                            {
+                                <span class="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 border border-blue-200/60">
+                                    🎓 @s.Program.ProgramName
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="text-xs text-slate-400">Prog ID: @s.ProgramId</span>
+                            }
+                        </td>
+
+                        <!-- DOB -->
+                        <td class="whitespace-nowrap px-5 py-4 text-sm text-slate-500">
+                            @s.DateOfBirth.ToString("dd MMM yyyy")
+                        </td>
+
+                        <!-- Email -->
+                        <td class="whitespace-nowrap px-5 py-4 text-sm">
+                            <a href="mailto:@s.Email" class="text-blue-600 hover:underline">@s.Email</a>
+                        </td>
+
+                        <!-- Phone -->
+                        <td class="whitespace-nowrap px-5 py-4 text-sm text-slate-500">
+                            @(string.IsNullOrWhiteSpace(s.Phone) ? "—" : s.Phone)
+                        </td>
+
+                        <!-- Validity -->
+                        <td class="whitespace-nowrap px-5 py-4 text-sm @validityClass">
+                            @validityLabel
+                        </td>
+
+                        <!-- Status badge -->
+                        <td class="whitespace-nowrap px-5 py-4">
+                            @if (isActive)
+                            {
+                                <span class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+                                    <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span> Active
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="inline-flex items-center gap-1 rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-700">
+                                    <span class="h-1.5 w-1.5 rounded-full bg-rose-500"></span> Inactive
+                                </span>
+                            }
+                        </td>
+
+                        <!-- Detail button -->
+                        <td class="whitespace-nowrap px-5 py-4 text-center">
+                            <a asp-controller="Student"
+                               asp-action="Details"
+                               asp-route-id="@s.StudentId"
+                               class="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1.5
+                                      text-xs font-semibold text-white transition hover:bg-blue-700 shadow-sm">
+                                👁 Details
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Empty state -->
+    <div id="emptyState" class="hidden px-6 py-16 text-center">
+        <div class="text-5xl mb-4">🎓</div>
+        <h3 class="text-lg font-semibold text-slate-700">No students match your filter</h3>
+        <p class="mt-1 text-sm text-slate-400">Try adjusting your search or status filter.</p>
+        <button onclick="resetFilters()" class="mt-4 inline-flex px-4 py-2 rounded-lg bg-gray-100
+               text-gray-600 text-sm font-medium hover:bg-gray-200 transition">Reset Filters</button>
+    </div>
+
+    <!-- Footer row -->
+    @if (list.Any())
+    {
+        <div class="border-t border-slate-100 bg-slate-50 px-6 py-3 text-xs text-slate-400">
+            Total <span class="font-semibold text-slate-600">@total</span> student(s) registered.
+        </div>
+    }
+</div>
+
+<!-- ══════════════════════════════════════
+     STYLES
+══════════════════════════════════════ -->
+<style>
+    .status-chip {
+        @@apply px-3 py-1 rounded-full text-xs font-medium border border-gray-300
+               text-gray-600 bg-white hover:border-blue-500 hover:text-blue-600
+               transition-colors cursor-pointer;
+    }
+    .active-chip {
+        @@apply bg-blue-600 text-white border-blue-600 hover:text-white;
+    }
+</style>
+
+<!-- ══════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════ -->
+<script>
+    let currentStatus = 'all';
+
+    function filterStatus(val) {
+        currentStatus = val;
+        document.querySelectorAll('.status-chip').forEach(btn => {
+            btn.classList.toggle('active-chip', btn.dataset.s === val);
+        });
+        applyFilters();
+    }
+
+    function applyFilters() {
+        const keyword = (document.getElementById('liveSearch').value || '').toLowerCase().trim();
+        const rows = document.querySelectorAll('.student-row');
+        let visible = 0;
+
+        rows.forEach(row => {
+            const name    = row.dataset.name    || '';
+            const id      = row.dataset.id      || '';
+            const program = row.dataset.program || '';
+            const email   = row.dataset.email   || '';
+            const phone   = row.dataset.phone   || '';
+            const status  = row.dataset.status  || '';
+
+            const matchesStatus  = currentStatus === 'all' ||
+                                   status.toLowerCase() === currentStatus.toLowerCase();
+            const matchesKeyword = !keyword ||
+                name.includes(keyword) || id.includes(keyword) ||
+                program.includes(keyword) || email.includes(keyword) || phone.includes(keyword);
+
+            const show = matchesStatus && matchesKeyword;
+            row.classList.toggle('hidden', !show);
+            if (show) visible++;
+        });
+
+        document.getElementById('visibleCount').textContent = visible;
+
+        const empty = document.getElementById('emptyState');
+        if (empty) empty.classList.toggle('hidden', visible > 0);
+    }
+
+    // Sortable columns
+    const sortAsc = {};
+    function sortTable(colIdx) {
+        const tbody = document.getElementById('tableBody');
+        const rows  = Array.from(tbody.querySelectorAll('tr.student-row'));
+        sortAsc[colIdx] = !sortAsc[colIdx];
+        rows.sort((a, b) => {
+            const aT = (a.cells[colIdx]?.innerText || '').trim().toLowerCase();
+            const bT = (b.cells[colIdx]?.innerText || '').trim().toLowerCase();
+            return sortAsc[colIdx] ? aT.localeCompare(bT) : bT.localeCompare(aT);
+        });
+        rows.forEach(r => tbody.appendChild(r));
+    }
+
+    function resetFilters() {
+        document.getElementById('liveSearch').value = '';
+        filterStatus('all');
+    }
+</script>
